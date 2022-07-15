@@ -1,4 +1,5 @@
-import Yoga, { Node, YogaNode } from 'yoga-layout';
+import { Children } from 'react';
+import Yoga, { Node, YogaNode } from 'yoga-layout-prebuilt';
 import { RawNode } from '../Register/getDataFromReactNode';
 import getSizeOfShape from './getShapeSize';
 import {
@@ -106,25 +107,25 @@ const constructYogaNode = (node: RawNode) => {
     if (marginArray[0] === 'auto') {
       yogaNode.setMarginAuto(Yoga.EDGE_TOP);
     } else {
-      yogaNode.setMargin(Yoga.EDGE_TOP, marginArray[0]);
+      yogaNode.setMargin(Yoga.EDGE_TOP, Number(marginArray[0]));
     }
 
     if (marginArray[1] === 'auto') {
       yogaNode.setMarginAuto(Yoga.EDGE_RIGHT);
     } else {
-      yogaNode.setMargin(Yoga.EDGE_RIGHT, marginArray[1]);
+      yogaNode.setMargin(Yoga.EDGE_RIGHT, Number(marginArray[1]));
     }
 
     if (marginArray[2] === 'auto') {
       yogaNode.setMarginAuto(Yoga.EDGE_BOTTOM);
     } else {
-      yogaNode.setMargin(Yoga.EDGE_BOTTOM, marginArray[2]);
+      yogaNode.setMargin(Yoga.EDGE_BOTTOM, Number(marginArray[2]));
     }
 
     if (marginArray[3] === 'auto') {
       yogaNode.setMarginAuto(Yoga.EDGE_LEFT);
     } else {
-      yogaNode.setMargin(Yoga.EDGE_LEFT, marginArray[3]);
+      yogaNode.setMargin(Yoga.EDGE_LEFT, Number(marginArray[3]));
     }
   }
 
@@ -221,22 +222,20 @@ const caculateNodes = (
   };
   let actualBondary = { ...boundaryBox };
   const { container, ...restNode } = node;
-
+  
   if (restNode.attrs.position === 'absolute') {
     boundaryBox.x = restNode.attrs.x;
     boundaryBox.y = restNode.attrs.y;
     actualBondary = boundaryBox;
   } else if (container) {
     const layout = container.getComputedLayout();
+
     boundaryBox.width = layout.width;
     boundaryBox.height = layout.height;
     boundaryBox.x = layout.left + parentBoundaryBox.x;
     boundaryBox.y = layout.top + parentBoundaryBox.y;
     actualBondary = { ...boundaryBox };
-    if (['circle', 'ellipse'].includes(restNode.type)) {
-      boundaryBox.x += boundaryBox.width / 2;
-      boundaryBox.y += boundaryBox.height / 2;
-    }
+
     if (restNode.type === 'text') {
       boundaryBox.y += boundaryBox.height;
     }
@@ -259,6 +258,26 @@ const caculateNodes = (
   };
 };
 
+const getTranslateNodes = (root: LayoutedNode, xOffset: number, yOffset: number): LayoutedNode =>{
+  const { boundaryBox, ...restNode } = root;
+  boundaryBox.x -= xOffset;
+  boundaryBox.y -= yOffset;
+
+  const children: LayoutedNode[] = [];
+  for (let i = 0; i < restNode.children.length; i += 1) {
+    children.push(getTranslateNodes(restNode.children[i], xOffset, yOffset));
+  }
+  return {
+    ...restNode,
+    attrs: {
+      ...restNode.attrs,
+      ...boundaryBox,
+    },
+    children,
+    boundaryBox,
+  }
+}
+
 const getPositionUsingYoga = (root: RawNode): LayoutedNode => {
   const basicContainer = Node.create();
 
@@ -269,13 +288,19 @@ const getPositionUsingYoga = (root: RawNode): LayoutedNode => {
     constructNodes(root, basicContainer) ||
     ({ ...root, container: basicContainer } as ContainerNode);
   basicContainer.calculateLayout();
-  const result = caculateNodes(newNodes, {
+
+  const calcNodes = caculateNodes(newNodes, {
     width: 0,
     height: 0,
     x: 0,
     y: 0,
   });
   basicContainer.freeRecursive();
+
+  const width_offset = calcNodes.boundaryBox.width / 2;
+  const height_offset = calcNodes.boundaryBox.height / 2;
+  const result = getTranslateNodes(calcNodes, width_offset, height_offset);
+
   return result;
 };
 
