@@ -32,6 +32,8 @@ interface GroupProps {
    * @description.zh-CN 图形/组的层级
    */
   zIndex?: number;
+
+  children: any;
 }
 
 export type CommonProps = GroupProps & EventAttrs;
