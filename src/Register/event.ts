@@ -1,10 +1,11 @@
-import { Graph, IG6GraphEvent, INode, IShape } from '@antv/g6';
+import { IShape } from '@antv/g-base';
+import { IAbstractGraph, IG6GraphEvent, Item } from '@antv/g6-core';
 
 export type ShapeEventListner = (
   event: IG6GraphEvent,
-  node: INode | null,
+  node: Item | null,
   shape: IShape,
-  graph: Graph,
+  graph: IAbstractGraph,
 ) => void;
 
 export interface EventAttrs {
@@ -47,15 +48,15 @@ const propsToEventMap = {
   contextmenu: 'onContextMenu',
 };
 
-export function appenAutoShapeListener(graph: Graph) {
+export function appenAutoShapeListener(graph: IAbstractGraph) {
   Object.entries(propsToEventMap).map(([eventName, propName]) => {
     graph.on(`node:${eventName}`, evt => {
       const shape = evt.shape;
-      const item = evt.item as INode;
-      const graph = evt.currentTarget as Graph;
+      const item = evt.item;
+      const graph = evt.currentTarget as IAbstractGraph;
       const func = shape?.get(propName) as ShapeEventListner;
 
-      if (func) {
+      if (func && item) {
         func(evt, item, shape, graph);
       }
     });

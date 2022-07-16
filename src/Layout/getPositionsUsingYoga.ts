@@ -222,7 +222,7 @@ const caculateNodes = (
   };
   let actualBondary = { ...boundaryBox };
   const { container, ...restNode } = node;
-  
+
   if (restNode.attrs.position === 'absolute') {
     boundaryBox.x = restNode.attrs.x;
     boundaryBox.y = restNode.attrs.y;
@@ -258,7 +258,11 @@ const caculateNodes = (
   };
 };
 
-const getTranslateNodes = (root: LayoutedNode, xOffset: number, yOffset: number): LayoutedNode =>{
+const getTranslateNodes = (
+  root: LayoutedNode,
+  xOffset: number,
+  yOffset: number,
+): LayoutedNode => {
   const { boundaryBox, ...restNode } = root;
   boundaryBox.x -= xOffset;
   boundaryBox.y -= yOffset;
@@ -275,8 +279,8 @@ const getTranslateNodes = (root: LayoutedNode, xOffset: number, yOffset: number)
     },
     children,
     boundaryBox,
-  }
-}
+  };
+};
 
 const getPositionUsingYoga = (root: RawNode): LayoutedNode => {
   const basicContainer = Node.create();
